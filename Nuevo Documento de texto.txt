@@ -1,0 +1,32 @@
+Interpretación del comportamiento:
+
+Durante la ejecución, se observa un reparto dinámico del trabajo entre los cuatro hilos concurrentes (candia, pablo, arturo y ricardo). 
+Como la duración de asignación de cada documento es aleatoria y el sistema operativo gestiona el tiempo de CPU de cada hilo de forma no determinista, 
+la cantidad de tareas procesadas por cada trabajador varía en cada prueba. 
+Sin embargo, el comportamiento global es completamente consistente: 
+gracias a la estructura thread-safe de la cola y la exclusión mutua mediante el candado (Lock), 
+la suma final siempre da exactamente 24 documentos, confirmando la ausencia de condiciones de carrera o pérdida de información.
+
+
+
+
+Respuestas a las Preguntas de Análisis
+¿Por qué queue.Queue es apropiada para compartir trabajos?
+Se utiliza queue.Queue porque está diseñada para entornos multihilo (thread-safe). Sus métodos de inserción (put) y extracción (get) 
+manejan la sincronización de manera atómica e interna, 
+lo que impide que dos trabajadores obtengan la misma tarea simultáneamente sin necesidad de gestionar un candado manual para la cola.
+
+
+
+¿Qué protege Lock y qué pasaría si se actualizara el resumen sin él?
+El Lock resguarda la sección crítica del código, que es la modificación de la estructura de datos compartida (conteo_trabajadores). 
+Si se omitiera el Lock, se producirían condiciones de carrera (race conditions), 
+provocando que los hilos sobrescriban el diccionario al mismo tiempo y generando pérdida de conteos o datos corruptos.
+
+
+
+¿Qué cambiarías si cada documento tuviera que guardarse en un archivo real?
+Agregaríá un candado exclusivo (Lock) para controlar el acceso al sistema de archivos durante la escritura, 
+o bien asignaría un archivo distinto para cada trabajador.
+ Esto evitaría que múltiples hilos intenten escribir de forma simultánea en la misma ruta de disco, 
+ lo cual mezclaría o corrompería el contenido guardado.
